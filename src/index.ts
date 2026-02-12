@@ -1,15 +1,18 @@
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
+import "reflect-metadata";
+import { DataSource } from "typeorm";
+import app from "./app";
+import { ormOptions } from "../src/db/config";
 
-dotenv.config();
+export const AppDataSource = new DataSource(ormOptions);
 
-const expressApp = express();
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = process.env.PORT || 3000;
 
-expressApp.use(cors());
-expressApp.use(express.json());
-
-expressApp.listen(PORT, () => {
-  console.info(`Running on Port ${PORT}`);
-});
+AppDataSource.initialize()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server started on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("DB connection failed:", err);
+  });
