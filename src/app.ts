@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/signin", authRoutes);
 app.use("/signup", authRoutes);
-app.use("/signin/new_token", authRoutes);
+
 app.use("/info", authMiddleware, (req, res) => {
   // @ts-ignore
   res.json({ id: req.user.id });

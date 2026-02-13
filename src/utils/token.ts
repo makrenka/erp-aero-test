@@ -8,8 +8,7 @@ const ACCESS_EXPIRES = Number(process.env.ACCESS_EXPIRES || 600);
 const REFRESH_EXPIRES = Number(process.env.REFRESH_EXPIRES || 86400);
 
 export const signAccess = (payload: object) => {
-  // include jti for blacklisting individual access tokens
-  return jwt.sign({ ...payload, jti: randomUUID() }, JWT_ACCESS_SECRET, {
+  return jwt.sign({ ...payload, tokenId: randomUUID() }, JWT_ACCESS_SECRET, {
     expiresIn: ACCESS_EXPIRES,
   });
 };
@@ -19,8 +18,7 @@ export const verifyAccess = (token: string) => {
 };
 
 export const signRefresh = (payload: object) => {
-  // include device id
-  return jwt.sign({ ...payload, rid: randomUUID() }, JWT_REFRESH_SECRET, {
+  return jwt.sign({ ...payload, tokenId: randomUUID() }, JWT_REFRESH_SECRET, {
     expiresIn: REFRESH_EXPIRES,
   });
 };

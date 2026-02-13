@@ -22,7 +22,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// POST /file/upload
+// /file/upload
 router.post("/upload", upload.single("file"), async (req, res) => {
   const fileRepository = AppDataSource.getRepository(File);
   // @ts-ignore
@@ -46,7 +46,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
   res.json({ ok: true, file });
 });
 
-// GET /file/list?page=1&list_size=10
+// /file/list?page=1&list_size=10
 router.get("/list", async (req, res) => {
   const fileRepository = AppDataSource.getRepository(File);
   const page = Math.max(1, Number(req.query.page) || 1);
@@ -60,7 +60,7 @@ router.get("/list", async (req, res) => {
   res.json({ page, list_size: listSize, total, items });
 });
 
-// DELETE /file/delete/:id
+// /file/delete/:id
 router.delete("/delete/:id", async (req, res) => {
   const fileRepository = AppDataSource.getRepository(File);
   const id = Number(req.params.id);
@@ -86,14 +86,14 @@ router.delete("/delete/:id", async (req, res) => {
   try {
     fs.unlinkSync(filepath);
   } catch (e) {
-    /* ignore */
+    console.warn(`Could not delete file: ${filepath}`, e);
   }
 
   await fileRepository.delete(id);
   res.json({ ok: true });
 });
 
-// GET /file/:id
+// /file/:id
 router.get("/:id", async (req, res) => {
   const fileRepository = AppDataSource.getRepository(File);
   const id = Number(req.params.id);
@@ -106,7 +106,7 @@ router.get("/:id", async (req, res) => {
   res.json({ file });
 });
 
-// GET /file/download/:id
+// /file/download/:id
 router.get("/download/:id", async (req, res) => {
   const fileRepository = AppDataSource.getRepository(File);
   const id = Number(req.params.id);
@@ -125,7 +125,7 @@ router.get("/download/:id", async (req, res) => {
   res.download(filepath, file.originalName);
 });
 
-// PUT /file/update/:id (multipart form 'file')
+// /file/update/:id
 router.put("/update/:id", upload.single("file"), async (req, res) => {
   const fileRepository = AppDataSource.getRepository(File);
   const id = Number(req.params.id);
@@ -157,7 +157,9 @@ router.put("/update/:id", upload.single("file"), async (req, res) => {
 
   try {
     fs.unlinkSync(old);
-  } catch (e) {}
+  } catch (e) {
+    console.warn(`Could not remove old file: ${old}`, e);
+  }
 
   file.filename = f.filename;
   file.originalName = f.originalname;

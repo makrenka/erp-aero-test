@@ -14,7 +14,7 @@ export class User {
     deviceId: string;
     refreshToken: string;
     revoked?: boolean;
-    issuedAt: number;
+    createdAt: number;
   }[];
   @CreateDateColumn() createdAt!: Date;
 }

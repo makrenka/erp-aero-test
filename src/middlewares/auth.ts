@@ -5,11 +5,11 @@ import { User } from "../entities/User";
 
 const accessBlacklist = new Set<string>();
 
-export async function authMiddleware(
+export const authMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction,
-) {
+) => {
   const auth = req.headers.authorization;
 
   if (!auth?.startsWith("Bearer ")) {
@@ -21,7 +21,7 @@ export async function authMiddleware(
   try {
     const payload: any = verifyAccess(token) as any;
 
-    if (payload.jti && accessBlacklist.has(payload.jti)) {
+    if (payload.tokenId && accessBlacklist.has(payload.tokenId)) {
       return res.status(401).json({ error: "Token revoked" });
     }
 
@@ -35,13 +35,13 @@ export async function authMiddleware(
     // @ts-ignore
     req.user = { id: user.id };
     // @ts-ignore
-    req.jti = payload.jti;
+    req.tokenId = payload.tokenId;
     next();
   } catch (e) {
     return res.status(401).json({ error: "Invalid token" });
   }
-}
+};
 
-export function blacklistAccessToken(jti: string) {
-  accessBlacklist.add(jti);
-}
+export const blacklistAccessToken = (tokenId: string) => {
+  accessBlacklist.add(tokenId);
+};
