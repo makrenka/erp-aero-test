@@ -6,10 +6,10 @@ import { signAccess, signRefresh, verifyRefresh } from "../utils/token";
 import { blacklistAccessToken } from "../middlewares/auth";
 
 const router = Router();
-const userRepository = AppDataSource.getRepository(User);
 
 // /signup -> POST
 router.post("/", async (req, res) => {
+  const userRepository = AppDataSource.getRepository(User);
   const { identifier, password, deviceId } = req.body;
 
   if (!identifier || !password) {
@@ -45,6 +45,7 @@ router.post("/", async (req, res) => {
 
 // /signin -> POST (login)
 router.post("/login", async (req, res) => {
+  const userRepository = AppDataSource.getRepository(User);
   const { identifier, password, deviceId } = req.body;
 
   if (!identifier || !password) {
@@ -77,6 +78,7 @@ router.post("/login", async (req, res) => {
 
 // /signin/new_token -> POST refresh
 router.post("/new_token", async (req, res) => {
+  const userRepository = AppDataSource.getRepository(User);
   const { refreshToken } = req.body;
 
   if (!refreshToken) {
@@ -120,6 +122,7 @@ router.post("/new_token", async (req, res) => {
 
 // /logout -> GET (must be protected)
 router.get("/", async (req, res) => {
+  const userRepository = AppDataSource.getRepository(User);
   // @ts-ignore
   const userId = req.user.id;
   // @ts-ignore

@@ -6,7 +6,6 @@ import { AppDataSource } from "../index";
 import { File } from "../entities/File";
 
 const router = Router();
-const fileRepository = AppDataSource.getRepository(File);
 
 const uploadDir = process.env.UPLOAD_DIR || "uploads";
 
@@ -25,6 +24,7 @@ const upload = multer({ storage });
 
 // POST /file/upload
 router.post("/upload", upload.single("file"), async (req, res) => {
+  const fileRepository = AppDataSource.getRepository(File);
   // @ts-ignore
   const ownerId = req.user.id;
   const f = req.file;
@@ -48,6 +48,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 
 // GET /file/list?page=1&list_size=10
 router.get("/list", async (req, res) => {
+  const fileRepository = AppDataSource.getRepository(File);
   const page = Math.max(1, Number(req.query.page) || 1);
   const listSize = Math.max(1, Number(req.query.list_size) || 10);
   const [items, total] = await fileRepository.findAndCount({
@@ -61,6 +62,7 @@ router.get("/list", async (req, res) => {
 
 // DELETE /file/delete/:id
 router.delete("/delete/:id", async (req, res) => {
+  const fileRepository = AppDataSource.getRepository(File);
   const id = Number(req.params.id);
   const file = await fileRepository.findOneBy({ id });
 
@@ -93,6 +95,7 @@ router.delete("/delete/:id", async (req, res) => {
 
 // GET /file/:id
 router.get("/:id", async (req, res) => {
+  const fileRepository = AppDataSource.getRepository(File);
   const id = Number(req.params.id);
   const file = await fileRepository.findOneBy({ id });
 
@@ -105,6 +108,7 @@ router.get("/:id", async (req, res) => {
 
 // GET /file/download/:id
 router.get("/download/:id", async (req, res) => {
+  const fileRepository = AppDataSource.getRepository(File);
   const id = Number(req.params.id);
   const file = await fileRepository.findOneBy({ id });
 
@@ -123,6 +127,7 @@ router.get("/download/:id", async (req, res) => {
 
 // PUT /file/update/:id (multipart form 'file')
 router.put("/update/:id", upload.single("file"), async (req, res) => {
+  const fileRepository = AppDataSource.getRepository(File);
   const id = Number(req.params.id);
   const f = req.file;
 
