@@ -4,7 +4,7 @@ import { randomUUID } from "crypto";
 import { AppDataSource } from "../index";
 import { User } from "../entities/User";
 import { signAccess, signRefresh, verifyRefresh } from "../utils/token";
-import { blacklistAccessToken } from "../middlewares/auth";
+import { blacklistToken, validateRefreshToken } from "../middlewares/auth";
 
 const router = Router();
 
@@ -91,7 +91,7 @@ router.post("/new_token", async (req, res) => {
   }
 
   try {
-    const payload: any = verifyRefresh(refreshToken) as any;
+    const payload = await validateRefreshToken(refreshToken);
     const user = await userRepository.findOneBy({ id: payload.id });
 
     if (!user) {
@@ -138,16 +138,29 @@ router.get("/", async (req, res) => {
   }
 
   if (accessTokenId) {
-    blacklistAccessToken(accessTokenId);
+    blacklistToken(accessTokenId, Number(process.env.ACCESS_EXPIRES));
   }
 
   if (refreshToken) {
-    const deviceIndex = (user.devices || []).findIndex(
-      (device) => device.refreshToken === refreshToken,
-    );
-    if (deviceIndex !== -1) {
-      user.devices![deviceIndex].revoked = true;
-      await userRepository.save(user);
+    try {
+      const payload: any = validateRefreshToken(refreshToken);
+
+      if (payload.tokenId) {
+        await blacklistToken(
+          payload.tokenId,
+          Number(process.env.REFRESH_EXPIRES),
+        );
+      }
+
+      const deviceIndex = (user.devices || []).findIndex(
+        (device) => device.refreshToken === refreshToken,
+      );
+      if (deviceIndex !== -1) {
+        user.devices![deviceIndex].revoked = true;
+        await userRepository.save(user);
+      }
+    } catch (err: any) {
+      console.warn("Logout: failed to process refreshToken:", err.message);
     }
   }
 

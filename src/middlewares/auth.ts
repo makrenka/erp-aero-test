@@ -1,9 +1,18 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyAccess } from "../utils/token";
+import { verifyAccess, verifyRefresh } from "../utils/token";
 import { AppDataSource } from "../index";
 import { User } from "../entities/User";
+import Redis from "ioredis";
 
-const accessBlacklist = new Set<string>();
+const redis = new Redis({
+  host: process.env.REDIS_HOST || "127.0.0.1",
+  port: Number(process.env.REDIS_PORT) || 6379,
+});
+
+const isTokenBlacklisted = async (tokenId: string) => {
+  const result = await redis.get(`blacklist: ${tokenId}`);
+  return !!result;
+};
 
 export const authMiddleware = async (
   req: Request,
@@ -21,7 +30,7 @@ export const authMiddleware = async (
   try {
     const payload: any = verifyAccess(token) as any;
 
-    if (payload.tokenId && accessBlacklist.has(payload.tokenId)) {
+    if (payload.tokenId && (await isTokenBlacklisted(payload.tokenId))) {
       return res.status(401).json({ error: "Token revoked" });
     }
 
@@ -42,6 +51,20 @@ export const authMiddleware = async (
   }
 };
 
-export const blacklistAccessToken = (tokenId: string) => {
-  accessBlacklist.add(tokenId);
+export const blacklistToken = async (tokenId: string, ttl = 600) => {
+  await redis.setex(`blacklist: ${tokenId}`, ttl, "1");
+};
+
+export const validateRefreshToken = async (refreshToken: string) => {
+  try {
+    const payload: any = verifyRefresh(refreshToken) as any;
+
+    if (payload.tokenId && (await isTokenBlacklisted(payload.tokenId))) {
+      throw new Error("Refresh token revoked");
+    }
+
+    return payload;
+  } catch (e) {
+    throw new Error("Invalid or revoked refresh token");
+  }
 };
